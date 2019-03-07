@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 	"log"
-	"fmt"
 )
 
 func main(){
@@ -16,12 +15,10 @@ func main(){
 func response_handler(w http.ResponseWriter,r *http.Request){
 	token:=r.Header.Get("X-Access-Token")
 	if token=="magic"{
-		fmt.Fprintf(w,"************** Token verified************")
-		fmt.Fprintf(w,"Authorization Successful")
 		log.Println(" Welcome")
-	}else {
-		fmt.Fprintf(w,"************** Token NOT verified************")
-		fmt.Fprintf(w,"You are NOT Authorized User")
+	}
+	if token!= "magic" {
+		log.Fatalf("You are NOT Authorized User")
 	}
 
 }
