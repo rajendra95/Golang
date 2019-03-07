@@ -2,40 +2,42 @@ package main
 
 import (
 	"testing"
-	"net/http"
-	"log"
-	"net/http/httptest"
 
+	"net/http"
+	"net/http/httptest"
+	"log"
 )
 
 func TestResponse_handler(t *testing.T){
-
 	req,err:=http.NewRequest("GET","/",nil)
-	req.Header.Set("X-Access-Token","magic")
 	if err!=nil{
-		log.Fatalf("Error in creating the Request %v",err)
+		t.Fatalf("Error in request",err)
 	}
-	rec:= httptest.NewRecorder()
+	tt := []struct{
 
-	tc:=[]struct{
+		Testname string
+		rec *httptest.ResponseRecorder
+		request *http.Request
+		accessToken string
 		ExpectedStatusCode int
-		ExpectedResponseBody []byte
 	}{
-		{ExpectedStatusCode:http.StatusOK,ExpectedResponseBody:[]byte("You have some magic in you\n")},
-		//{AccessToken: "", ExpectedStatusCode:http.StatusForbidden, ExpectedResponseBody:[]byte(("You don't have enough magic in you\n")),request:req},
+		{Testname:"Correct Header Included", rec: httptest.NewRecorder(),request:req,accessToken:"magic",ExpectedStatusCode:http.StatusOK},
+		{Testname:"Correct Header Empty", rec: httptest.NewRecorder(),request:req,accessToken:"",ExpectedStatusCode:http.StatusOK},
 	}
-	for _,c:= range tc{
-		response_handler(rec,req)
-		if c.ExpectedStatusCode!=req.Response.StatusCode{
-			t.Errorf("the status code does not match! Expected %v Got %v",c.ExpectedStatusCode,req.Response.StatusCode)
+
+	for _,tc:=range tt{
+
+		req.Header.Set("X-Access-Token",tc.accessToken)
+		log.Println(req.Header)
+		response_handler(tc.rec,tc.request)
+		res:=tc.rec.Result()
+		defer res.Body.Close()
+		log.Println(res.StatusCode)
+		if res.StatusCode!= tc.ExpectedStatusCode{
+			t.Fatalf("Expected statuscode %v Got %v ",tc.ExpectedStatusCode,res.StatusCode)
 			t.Fail()
 		}
-		/*
-		if !bytes.Equal(c.ExpectedResponseBody,c.request.Body){
-			t.Errorf("Body did not match Expected %v Got %v",c.ExpectedResponseBody,c.request.Body)
-			t.Fail()
-		}*/
+
 	}
-
-
 }
+
